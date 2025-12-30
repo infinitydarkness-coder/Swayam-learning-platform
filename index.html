@@ -275,13 +275,15 @@
     });
 
     // OAuth
-    async function oauth(provider) {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: `${location.origin}${DASHBOARD_URL}` }
-      });
-      if (error) alert(error.message);
+  async function oauth(provider) {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: "https://swayam-learning.vercel.app/dashboard.html"
     }
+  });
+  if (error) alert(error.message);
+}
     document.getElementById("googleBtn").addEventListener("click", () => oauth("google"));
     document.getElementById("githubBtn").addEventListener("click", () => oauth("github"));
     // For LinkedIn, dashboard supports 'linkedin' or 'linkedin_oidc' depending on setup
@@ -296,4 +298,5 @@
     })();
   </script>
 </body>
+
 </html>
