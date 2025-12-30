@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swayam | Hackathons 🏆</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --sidebar-width: 240px;
+      --accent: #2563eb;
+      --bg-light: #f4f6f9;
+      --bg-dark: #0d1117;
+      --card-light: #fff;
+      --card-dark: #161b22;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body { 
+      font-family: Arial, sans-serif;
+      display: flex;
+      min-height: 100vh;
+    }
+    body.dark { background: #0d1117; color: #fff; }
+    body.light { background: #f4f4f4; color: #000; }
+
+       /* Sidebar */
+    .sidebar {
+      position:fixed; top:0; left:0; bottom:0;
+      width:var(--sidebar-width);
+      background:#111827; color:#fff;
+      padding:20px; z-index:1000;
+      transform:translateX(0); transition:.3s;
+      height:100vh;
+      overflow-y:auto;
+    }
+    .sidebar h2 { margin:0 0 20px; text-align:center; }
+    .sidebar ul { list-style:none; padding:0; margin:0; }
+    .sidebar li {
+      padding:12px; border-radius:8px; cursor:pointer;
+      color:#cbd5e1; margin-bottom:6px;
+      display:flex; align-items:center; gap:10px;
+      transition:background .2s;
+    }
+    .sidebar li.active, .sidebar li:hover {
+      background:var(--accent); color:#fff;
+    }
+
+    /* Hamburger menu */
+    .hamburger {
+      display:none; position:fixed; top:15px; left:15px;
+      font-size:24px; background:var(--accent); color:#fff;
+      border:none; padding:8px 12px; border-radius:6px; z-index:1100; cursor:pointer;
+    }
+
+
+    /* Main */
+    .main {
+      margin-left: 260px;
+      flex: 1; padding: 20px;
+    }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 20px; background: rgba(0,0,0,0.1);
+      position: sticky; top: 0;
+    }
+    .toggle { cursor: pointer; font-size: 20px; }
+
+    /* Hackathon Grid */
+    .hackathon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      padding: 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border: solid white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, var(--brand) 0%, var(--success) 100%);
+      opacity: 0.8;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .card h3 {
+      margin-bottom: 16px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    .countdown {
+      font-weight: 600;
+      margin: 16px 0;
+      color: var(--warning);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+    }
+
+    .countdown::before {
+      content: '⏰';
+    }
+
+    .prize {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--success);
+      font-weight: 500;
+      margin: 12px 0;
+    }
+
+    .prize::before {
+      content: '🏆';
+    }
+
+    .rules {
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-register {
+      background: var(--brand);
+      color: white;
+      width: 100%;
+      margin-top: 16px;
+      border: solid white;
+    }
+
+    .btn-register:hover {
+      background: var(--brand-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-register::before {
+      content: '🚀';
+    }
+
+    /* My Hackathons */
+    .my-hackathons {
+      margin: 32px auto;
+      background: var(--card);
+      padding: 32px;
+      border-radius: 20px;
+      border: 1px solid var(--stroke);
+      max-width: 1400px;
+    }
+
+    .my-hackathons h2 {
+      margin-bottom: 24px;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .my-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .my-list li {
+      background: rgba(59, 130, 246, 0.1);
+      padding: 16px;
+      border-radius: 12px;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+    }
+
+    .my-list li:hover {
+      transform: translateX(4px);
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    .my-list li::before {
+      content: '🎯';
+      margin-right: 12px;
+    }
+
+    .my-list .status {
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .my-list .status.active {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+    }
+
+    .my-list .status.upcoming {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
+    }
+
+    /* Logo */
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .logo img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+     @media (max-width: 768px) {
+      .charts {
+        gap: 20px;
+      }
+      .charts canvas {
+        max-width: 100%;
+        max-height: 180px;
+      }
+    }
+
+    /* Responsive styles */
+    @media(max-width:1024px){
+      .main { padding:12px; }
+      .cards, .charts { gap:12px; }
+    }
+    @media(max-width:768px){
+      .hamburger { display:block; }
+      .sidebar { 
+        transform:translateX(-100%);
+        width:220px;
+        padding:16px;
+      }
+      .sidebar.show { transform:translateX(0); }
+      .main { margin-left:0; padding-top:60px; }
+      .header h1 { font-size:1.3em; }
+      .cards { grid-template-columns:1fr; }
+      .charts { grid-template-columns:1fr; }
+    }
+    @media(max-width:480px){
+      .main { padding:8px; }
+      .card { padding:10px; }
+      .header h1 { font-size:1em; }
+      .progress-ring { width:90px; height:90px; }
+      .badge { font-size:12px; padding:4px 7px; }
+    }
+
+    /* Toast Notifications */
+    #toastContainer {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      color: #fff;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      animation: slideIn 0.4s ease, fadeOut 0.4s ease 2.6s forwards;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(120%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateX(120%);
+      }
+    }
+  </style>
+</head>
+<body class="light">
+ <!-- Mobile Hamburger -->
+  <button class="hamburger" id="hamburger"><i class="fas fa-bars"></i></button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div style="text-align:center; margin-bottom:20px;">
+      <img src="swayam.png" alt="Swayam Logo" style="width:60px; height:60px; border-radius:50%; margin-bottom:10px;">
+      <h2> Swayam</h2>
+    </div>
+    <ul>
+      <li onclick="go('dashboard.html')">🏠 Dashboard</li>
+      <li onclick="go('courses.html')">🎓 Courses</li>
+      <li onclick="go('mentorship.html')">👨‍🏫 Mentorship</li>
+      <li onclick="go('resume.html')">📄 Resume</li>
+      <li class="active" onclick="go('hackathons.html')">🏆 Hackathons</li>
+      
+    </ul>
+  </aside>
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <h1>🏆 Upcoming Hackathons</h1>
+      <span class="toggle" id="modeToggle">🌙</span>
+    </div>
+
+    <!-- Hackathon Grid -->
+    <div class="hackathon-grid" id="hackathonGrid"></div>
+
+    <!-- My Hackathons -->
+    <div class="my-hackathons">
+      <h2>✅ My Registered Hackathons</h2>
+      <ul class="my-list" id="myHackathons"></ul>
+      <button class="btn" onclick="resetRegistrations()" style="margin-top: 15px; background: #ef4444; color: white; width: auto; padding: 10px 20px;">🔄 Reset All</button>
+    </div>
+  </div>
+
+<script async>
+  // ✅ Initialize Supabase
+  (async () => {
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    const SUPABASE_URL = "https://xyakbprycadzleexjpoi.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5YWticHJ5Y2FkemxlZXhqcG9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDAyNTMsImV4cCI6MjA3ODA3NjI1M30.z4IqtEj02jyPE9d5bKH1UP_lxRm3ZcBCUcy7t5LUvrg";
+    window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ✅ HELPER: Add XP to user profile
+    window.addXP = async function(amount) {
+      const { data: { user } } = await window.supabase.auth.getUser();
+      if (!user) return;
+
+      // get current xp
+      const { data: profile, error } = await window.supabase
+        .from("profiles")
+        .select("xp")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.error("XP fetch error:", error);
+        return;
+      }
+
+      // update xp
+      await window.supabase
+        .from("profiles")
+        .update({
+          xp: (profile.xp || 0) + amount
+        })
+        .eq("id", user.id);
+        
+      console.log(`✅ Added ${amount} XP`);
+    }
+
+    // ✅ HELPER: Show XP toast notification
+    window.showXPToast = function(xp, label = "XP Earned") {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerHTML = `✨ ${label} <strong>+${xp} XP</strong>`;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+  })();
+
+  // Dark/Light Mode
+  const toggle = document.getElementById("modeToggle");
+  toggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+    document.body.classList.toggle("light");
+    toggle.textContent = document.body.classList.contains("dark") ? "🌙" : "☀️";
+  });
+
+  // Sample Hackathons
+  const hackathons = [
+    { id:1, name:"AI Innovation Challenge 🤖", deadline:"2025-09-20", reward:"$5000", rules:"Build an AI project." },
+    { id:2, name:"Web3 Hack 🌐", deadline:"2025-10-05", reward:"$10,000", rules:"Create a blockchain dApp." },
+    { id:3, name:"GreenTech Hack 🌱", deadline:"2025-09-15", reward:"$3000", rules:"Work on sustainability projects." }
+  ];
+
+  // Render Hackathon  Cards
+  const grid = document.getElementById("hackathonGrid");
+  hackathons.forEach(h => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h3>${h.name}</h3>
+      <p><b>Reward:</b> ${h.reward}</p>
+      <p><b>Rules:</b> ${h.rules}</p>
+      <p class="countdown" id="countdown-${h.id}"></p>
+      <button class="btn btn-register" onclick="registerHackathon('${h.name}')">Register</button>
+    `;
+    grid.appendChild(card);
+
+    // Countdown
+    const countdownEl = card.querySelector(`#countdown-${h.id}`);
+    setInterval(() => {
+      const deadline = new Date(h.deadline).getTime();
+      const now = new Date().getTime();
+      const diff = deadline - now;
+      if (diff <= 0) {
+        countdownEl.textContent = "⏳ Closed";
+      } else {
+        const days = Math.floor(diff / (1000*60*60*24));
+        const hrs = Math.floor((diff % (1000*60*60*24))/(1000*60*60));
+        countdownEl.textContent = `⏳ ${days}d ${hrs}h left`;
+      }
+    }, 1000);
+  });
+
+  // Register Hackathon
+  async function registerHackathon(name) {
+    let myHacks = JSON.parse(localStorage.getItem("myHackathons")) || [];
+    if (!myHacks.includes(name)) {
+      myHacks.push(name);
+      localStorage.setItem("myHackathons", JSON.stringify(myHacks));
+      
+      // Award 100 XP for hackathon registration
+      await addXP(100);
+      
+      renderMyHackathons();
+      showXPToast(100, "Hackathon Registered");
+    } else {
+      alert("⚠️ Already registered for " + name);
+    }
+  }
+
+  
+
+  // Render My Hackathons
+  function renderMyHackathons() {
+    const list = document.getElementById("myHackathons");
+    list.innerHTML = "";
+    let myHacks = JSON.parse(localStorage.getItem("myHackathons")) || [];
+    myHacks.forEach(h => {
+      const li = document.createElement("li");
+      li.textContent = "🏆 " + h;
+      list.appendChild(li);
+    });
+  }
+  renderMyHackathons();
+
+  // Reset all registered hackathons
+  function resetRegistrations() {
+    console.log("Reset button clicked");
+    if (confirm("⚠️ This will clear all your registered hackathons. Are you sure?")) {
+      console.log("Confirmed - clearing registrations");
+      localStorage.removeItem("myHackathons");
+      localStorage.removeItem("user_hackathon_registrations");
+      renderMyHackathons();
+      alert("✅ All registrations cleared!");
+    }
+  }
+
+  // Sidebar navigation for all pages
+  function go(path){ window.location.href=path; }
+// Hamburger toggle
+const hamburger = document.getElementById("hamburger");
+const sidebar = document.getElementById("sidebar");
+hamburger.addEventListener("click",()=>{
+  sidebar.classList.toggle("show");
+});
+
+// Hide sidebar on nav click (mobile)
+sidebar.querySelectorAll("li").forEach(li=>{
+  li.addEventListener("click",()=>{
+    if(window.innerWidth<=768) sidebar.classList.remove("show");
+  });
+});
+
+// Responsive: close sidebar on resize if desktop
+window.addEventListener("resize",()=>{
+  if(window.innerWidth>768) sidebar.classList.remove("show");
+});
+
+// Add CSS animation for XP notification
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  @keyframes slideOut {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+  }
+`;
+document.head.appendChild(style);
+
+</script>
+
+<!-- Toast Container for XP notifications -->
+<div id="toastContainer"></div>
+
+</body>
+</html>
