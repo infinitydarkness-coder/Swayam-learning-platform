@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Swayam • Dashboard</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --sidebar-width: 240px;
+      --accent: #2563eb;
+      --bg-light: #f4f6f9;
+      --bg-dark: #0d1117;
+      --card-light: #fff;
+      --card-dark: #161b22;
+    }
+    *{box-sizing:border-box;}
+    body {
+      margin:0; font-family: Inter, Arial, sans-serif;
+      background: var(--bg-light); transition:.3s;
+    }
+    body.dark { background: var(--bg-dark); color:#fff; }
+
+    /* Sidebar */
+    .sidebar {
+      position:fixed; top:0; left:0; bottom:0;
+      width:var(--sidebar-width);
+      background:#111827; color:#fff;
+      padding:20px; z-index:1000;
+      transform:translateX(0); transition:.3s;
+      height:100vh;
+      overflow-y:auto;
+    }
+    .sidebar h2 { margin:0 0 20px; text-align:center; }
+    .sidebar ul { list-style:none; padding:0; margin:0; }
+    .sidebar li {
+      padding:12px; border-radius:8px; cursor:pointer;
+      color:#cbd5e1; margin-bottom:6px;
+      display:flex; align-items:center; gap:10px;
+      transition:background .2s;
+    }
+    .sidebar li.active, .sidebar li:hover {
+      background:var(--accent); color:#fff;
+    }
+
+    /* Hamburger menu */
+    .hamburger {
+      display:none; position:fixed; top:15px; left:15px;
+      font-size:24px; background:var(--accent); color:#fff;
+      border:none; padding:8px 12px; border-radius:6px; z-index:1100; cursor:pointer;
+    }
+
+    /* Main */
+    .main { margin-left:var(--sidebar-width); padding:20px; transition:.3s; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .toggle { background:var(--accent); color:#fff; padding:8px 12px; border:none; border-radius:8px; cursor:pointer; }
+
+    /* user area top-right */
+    .userArea { display:flex; gap:12px; align-items:center; }
+    .userName { font-weight:600; color: #0f172a; }
+    body.dark .userName { color: #fff; }
+    .avatar { width:36px; height:36px; border-radius:999px; background:#94a3b8; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; }
+
+    /* Cards */
+    .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px,1fr)); gap:20px; }
+    .card { background:var(--card-light); border-radius:12px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,.1); }
+    body.dark .card { background:var(--card-dark); }
+
+    /* Progress ring */
+    .progress-ring {
+      width: 120px;
+      height: 120px;
+      position: relative;
+      margin: 12px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .progress-ring svg {
+      transform: rotate(-90deg);
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .progress-ring .center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      color: #0f172a;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    body.dark .progress-ring .center {
+      color: #fff;
+    }
+
+    /* Quests & Badges */
+    .quests li { margin:6px 0; }
+    .badges { display:flex; flex-wrap:wrap; gap:10px; }
+    .badge { background:var(--accent); color:#fff; padding:6px 10px; border-radius:8px; font-size:13px; }
+
+    /* Leaderboard */
+    .leaderboard li { margin:6px 0; padding:8px; border-radius:8px; background:rgba(37,99,235,.1); display:flex; justify-content:space-between; }
+    body.dark .leaderboard li { background:rgba(255,255,255,.05); }
+
+    /* Charts */
+    .charts { display:grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap:32px; margin-top:20px; }
+    .charts canvas {
+      max-width: 320px;
+      max-height: 240px;
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      margin-bottom: 0 !important;
+    }
+    .charts canvas:first-child {
+      margin-bottom: 24px;
+    }
+    @media (max-width: 768px) {
+      .charts {
+        gap: 20px;
+      }
+      .charts canvas {
+        max-width: 100%;
+        max-height: 180px;
+      }
+    }
+
+    /* Responsive styles */
+    @media(max-width:1024px){
+      .main { padding:12px; }
+      .cards, .charts { gap:12px; }
+    }
+    @media(max-width:768px){
+      .hamburger { display:block; }
+      .sidebar { 
+        transform:translateX(-100%);
+        width:220px;
+        padding:16px;
+      }
+      .sidebar.show { transform:translateX(0); }
+      .main { margin-left:0; padding-top:60px; }
+      .header h1 { font-size:1.3em; }
+      .cards { grid-template-columns:1fr; }
+      .charts { grid-template-columns:1fr; }
+    }
+    @media(max-width:480px){
+      .main { padding:8px; }
+      .card { padding:10px; }
+      .header h1 { font-size:1em; }
+      .progress-ring { width:90px; height:90px; }
+      .badge { font-size:12px; padding:4px 7px; }
+    }
+  </style>
+</head>
+<body class="light">
+  <!-- Mobile Hamburger -->
+  <button class="hamburger" id="hamburger"><i class="fas fa-bars"></i></button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div style="text-align:center; margin-bottom:20px;">
+      <img src="swayam.png" alt="Swayam Logo" style="width:60px; height:60px; border-radius:50%; margin-bottom:10px;">
+      <h2> Swayam</h2>
+    </div>
+    <ul>
+      <li class="active" onclick="go('dashboard.html')">🏠 Dashboard</li>
+      <li onclick="go('courses.html')">🎓 Courses</li>
+      <li onclick="go('mentorship.html')">👨‍🏫 Mentorship</li>
+      <li onclick="go('resume.html')">📄 Resume</li>
+      <li onclick="go('hackathons.html')">🏆 Hackathons</li>
+
+    </ul>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="header">
+      <h1>Welcome Back 👋</h1>
+      <div class="userArea">
+        <button id="modeToggle" class="toggle"><i class="fas fa-sun"></i></button>
+        <div id="userNameWrap" style="display:flex;align-items:center;gap:10px;">
+          <!-- filled by JS -->
+          <div class="userName" id="userName"></div>
+          <div class="avatar" id="userAvatar">U</div>
+          <button id="logoutBtn" class="toggle" style="background:#ef4444"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gamified cards -->
+    <div class="cards">
+      <div class="card">
+        <h3>🎯 Your Progress</h3>
+        <div class="progress-ring">
+          <svg width="120" height="120">
+            <circle cx="60" cy="60" r="50" stroke="#ddd" stroke-width="10" fill="none"/>
+            <circle id="xpProgress" cx="60" cy="60" r="50" stroke="#2563eb" stroke-width="10" fill="none" stroke-dasharray="314" stroke-dashoffset="314"/>
+          </svg>
+          <div class="center" id="xpText">0 XP</div>
+        </div>
+        <p>🔥 Streak: <span id="streak">0</span> days</p>
+      </div>
+
+      <div class="card">
+        <h3>🎯 Daily Quests</h3>
+        <div id="dailyQuests"></div>
+      </div>
+
+      <div class="card">
+        <h3>🏅 Achievements</h3>
+        <div class="badges" id="badges"></div>
+      </div>
+
+      <div class="card">
+        <h3>🏆 Leaderboard</h3>
+        <ul class="leaderboard" id="leaderboard"></ul>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="card">
+      <h3>📊 Analytics</h3>
+      <div class="charts">
+        <canvas id="xpChart"></canvas>
+        <canvas id="activityChart"></canvas>
+      </div>
+    </div>
+  </main>
+
+<script type="module" async>
+  // ---------- REPLACE THESE with your Supabase values ----------
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+  const SUPABASE_URL = "https://xyakbprycadzleexjpoi.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5YWticHJ5Y2FkemxlZXhqcG9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDAyNTMsImV4cCI6MjA3ODA3NjI1M30.z4IqtEj02jyPE9d5bKH1UP_lxRm3ZcBCUcy7t5LUvrg";
+  // -------------------------------------------------------------
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ========== DOM ELEMENT REFERENCES ==========
+  const userNameEl = document.getElementById("userName");
+  const userAvatar = document.getElementById("userAvatar");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const xpText = document.getElementById("xpText");
+  const xpCircle = document.getElementById("xpProgress");
+  const streakEl = document.getElementById("streak");
+  const questsEl = document.getElementById("quests");
+  const badgesEl = document.getElementById("badges");
+  const leaderboardEl = document.getElementById("leaderboard");
+
+  // ========== GLOBAL STATE ==========
+  let currentUser = null;
+  let profile = null;
+  let xpChart, activityChart;
+
+  // ========== XP LEVEL SYSTEM ==========
+  const LEVEL_THRESHOLDS = {
+    0: { xp: 0, label: "Novice" },
+    1: { xp: 500, label: "Apprentice" },
+    2: { xp: 1000, label: "Scholar" },
+    3: { xp: 1500, label: "Master" },
+    4: { xp: 2000, label: "Sage" },
+    5: { xp: 2500, label: "Legend" }
+  };
+
+  let previousXP = 0;
+  let previousLevel = 0;
+
+  // Get current level info (returns {level, xp, label})
+  function getCurrentLevel(totalXP) {
+    let currentLevel = 0;
+    for (const level in LEVEL_THRESHOLDS) {
+      if (totalXP >= LEVEL_THRESHOLDS[level].xp) {
+        currentLevel = parseInt(level);
+      }
+    }
+    return {
+      level: currentLevel,
+      xp: LEVEL_THRESHOLDS[currentLevel].xp,
+      label: LEVEL_THRESHOLDS[currentLevel].label
+    };
+  }
+
+  // Get next level info (returns null if max level)
+  function getNextLevel(totalXP) {
+    const current = getCurrentLevel(totalXP);
+    const nextLevel = current.level + 1;
+    if (LEVEL_THRESHOLDS[nextLevel]) {
+      return {
+        level: nextLevel,
+        xp: LEVEL_THRESHOLDS[nextLevel].xp,
+        label: LEVEL_THRESHOLDS[nextLevel].label
+      };
+    }
+    return null;
+  }
+
+  // Single source of truth for XP UI updates
+  function renderXP(totalXP) {
+    const currentLevel = getCurrentLevel(totalXP);
+    const nextLevel = getNextLevel(totalXP);
+
+    xpText.innerText = `${totalXP} XP`;
+
+    const radius = 52;
+    const circumference = 2 * Math.PI * radius;
+    xpCircle.style.strokeDasharray = circumference;
+
+    if (!nextLevel) {
+      // Max level → full ring
+      xpCircle.style.strokeDashoffset = 0;
+      return;
+    }
+
+    const progressXP = totalXP - currentLevel.xp;
+    const requiredXP = nextLevel.xp - currentLevel.xp;
+    const progress = Math.max(0, progressXP / requiredXP);
+
+    xpCircle.style.strokeDashoffset = circumference - progress * circumference;
+  }
+
+  // Show level-up animation
+  function showLevelUpAnimation(newLevel) {
+    const container = document.getElementById("toastContainer");
+    if (!container) return;
+    
+    const levelInfo = LEVEL_THRESHOLDS[newLevel];
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerHTML = `🎉 <strong>Level ${newLevel}</strong> - ${levelInfo.label}!`;
+    toast.style.background = "linear-gradient(135deg, #8b5cf6, #ec4899)";
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 4000);
+  }
+
+  // Load user XP from localStorage (courses + hackathons)
+  function loadLocalUserXP() {
+    const completedCourses = JSON.parse(localStorage.getItem('user_completed_courses')) || [];
+    const hackathonRegs = JSON.parse(localStorage.getItem('user_hackathon_registrations')) || [];
+    
+    return {
+      completedCourses,
+      hackathonRegs,
+      xpBreakdown: {
+        courses: completedCourses.reduce((sum, c) => sum + (c.xp || 0), 0),
+        hackathons: hackathonRegs.reduce((sum, h) => sum + (h.xp || 0), 0)
+      }
+    };
+  }
+
+  // render quests list (interactive)
+  function renderQuests() {
+    questsEl.innerHTML = "";
+    
+    // Load local XP data
+    const localData = loadLocalUserXP();
+    const courseXPQuest = {
+      text: `Courses Completed (${localData.completedCourses.length})`,
+      xp: localData.xpBreakdown.courses,
+      done: localData.completedCourses.length > 0
+    };
+    const hackathonXPQuest = {
+      text: `Hackathons Registered (${localData.hackathonRegs.length})`,
+      xp: localData.xpBreakdown.hackathons,
+      done: localData.hackathonRegs.length > 0
+    };
+    
+    const quests = [courseXPQuest, hackathonXPQuest, ...(profile?.quests || [])];
+    
+    quests.forEach((q, i) => {
+      const li = document.createElement("li");
+      const chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.checked = !!q.done;
+      chk.disabled = true; // Auto-tracked
+      li.appendChild(chk);
+      li.appendChild(document.createTextNode(` ${q.text} (+${q.xp} XP)`));
+      questsEl.appendChild(li);
+    });
+  }
+
+  function renderBadges() {
+    badgesEl.innerHTML = "";
+    (profile.badges || []).forEach(bd => {
+      const d = document.createElement("div");
+      d.className = "badge";
+      d.innerText = bd;
+      badgesEl.appendChild(d);
+    });
+  }
+
+  function renderLeaderboard(rows) {
+    leaderboardEl.innerHTML = "";
+    // Sort by XP descending and limit to top 10
+    const sorted = [...rows].sort((a, b) => (b.xp || 0) - (a.xp || 0)).slice(0, 10);
+    
+    sorted.forEach((r, idx) => {
+      const li = document.createElement("li");
+      const firstName = r.name ? r.name.split(' ')[0] : r.email.split('@')[0];
+      const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '✨';
+      li.innerHTML = `<span>${rankEmoji} ${firstName}</span><b>${r.xp || 0} XP</b>`;
+      leaderboardEl.appendChild(li);
+    });
+  }
+
+  function updateCharts() {
+    // XP chart sample
+    if (xpChart) xpChart.destroy();
+    if (activityChart) activityChart.destroy();
+
+    const labels = ["Week -2","Week -1","This Week"];
+    const xpPoints = [Math.max(0, (profile.history?.slice(-3)[0] || 0)), Math.max(0, (profile.history?.slice(-3)[1] || 0)), profile.xp || 0];
+
+    xpChart = new Chart(document.getElementById("xpChart"), {
+      type: "line",
+      data: { labels, datasets: [{ label: "XP Growth", data: xpPoints, borderColor: "#2563eb", tension: 0.3 }] }
+    });
+
+    activityChart = new Chart(document.getElementById("activityChart"), {
+      type: "pie",
+      data: {
+        labels: ["Courses","Quizzes","Hackathons"],
+        datasets: [{ data: profile.activity || [60,30,10], backgroundColor: ["#22c55e","#f59e0b","#2563eb"] }]
+      }
+    });
+  }
+
+  // Toggle quest completion and persist to Supabase
+  async function toggleQuest(index, done) {
+    if (!profile || !currentUser) return;
+    const quests = profile.quests || [];
+    if (!quests[index]) return;
+    
+    // if marking done and was not done, add xp
+    const wasDone = !!quests[index].done;
+    const xpReward = quests[index].xp || 0;
+    
+    if (!wasDone && done) {
+      const newXp = (profile.xp || 0) + xpReward;
+      
+      // Award XP directly to Supabase - ONLY XP
+      try {
+        await supabase
+          .from("profiles")
+          .update({
+            xp: newXp
+          })
+          .eq("id", currentUser.id);
+        
+        console.log(`✅ Awarded ${xpReward} XP for quest: ${quests[index].text}`);
+      } catch (err) {
+        console.error("Failed saving XP:", err);
+        return;
+      }
+    }
+    
+    // Mark quest as done locally for UI
+    quests[index].done = done;
+    profile.quests = quests;
+    
+    // Realtime will sync this back
+  }
+
+  // fetch leaderboard (sorted profiles by xp)
+  async function fetchLeaderboard() {
+    try {
+      const { data, error } = await supabase.from('profiles').select('id,name,email,xp').order('xp', { ascending: false }).limit(10);
+      if (error) {
+        console.error("Leaderboard fetch error", error);
+        return;
+      }
+      console.log("Leaderboard data fetched:", data);
+      renderLeaderboard(data || []);
+    } catch (err) {
+      console.error("Leaderboard fetch exception:", err);
+    }
+  }
+
+  // get or create profile for current user
+  async function fetchOrCreateProfile(user) {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 = No rows found (single) — other errors log
+      console.warn("profile read error", error);
+    }
+    if (data) {
+      return data;
+    } else {
+      // create a default profile
+      const defaultProfile = {
+        id: user.id,
+        name: user.user_metadata?.name || user.email,
+        email: user.email,
+        xp: 120,
+        streak: 0,
+        quests: [
+          { text: "Complete a Course", xp: 50, done: false },
+          { text: "Take a Quiz", xp: 30, done: false }
+        ],
+        badges: ["Beginner 🎉"],
+        activity: [60,30,10],
+        history: []
+      };
+      const { data:inserted, error:insErr } = await supabase.from('profiles').insert(defaultProfile).select().single();
+      if (insErr) {
+        console.error("profile insert error", insErr);
+        return defaultProfile; // fallback local
+      }
+      return inserted;
+    }
+  }
+
+  // ========== DAILY QUESTS SYSTEM ==========
+  function generateDailyQuests(profile) {
+    const quests = [];
+
+    quests.push({
+      title: "Complete 1 quiz today",
+      xp: 50
+    });
+
+    if (profile.streak < 3) {
+      quests.push({
+        title: "Maintain your learning streak today",
+        xp: 20
+      });
+    } else {
+      quests.push({
+        title: "Watch 20 minutes of any course",
+        xp: 30
+      });
+    }
+
+    quests.push({
+      title: "Open and explore a new course",
+      xp: 10
+    });
+
+    return quests;
+  }
+
+  async function ensureDailyQuests(user, profile) {
+    const today = new Date().toISOString().split("T")[0];
+
+    const { data: existing } = await supabase
+      .from("daily_quests")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("quest_date", today);
+
+    if (existing && existing.length > 0) {
+      return existing;
+    }
+
+    const generated = generateDailyQuests(profile);
+
+    const inserts = generated.map(q => ({
+      user_id: user.id,
+      title: q.title,
+      xp: q.xp,
+      quest_date: today
+    }));
+
+    await supabase.from("daily_quests").insert(inserts);
+
+    return inserts;
+  }
+
+  async function loadDailyQuests(user, profile) {
+    const quests = await ensureDailyQuests(user, profile);
+
+    const box = document.getElementById("dailyQuests");
+    box.innerHTML = "";
+
+    quests.forEach(q => {
+      const row = document.createElement("div");
+      row.style.marginBottom = "8px";
+
+      row.innerHTML = `
+        <label style="cursor:pointer;">
+          <input type="checkbox" ${q.completed ? "checked disabled" : ""}/>
+          ${q.title} (+${q.xp} XP)
+        </label>
+      `;
+
+      const checkbox = row.querySelector("input");
+
+      checkbox.addEventListener("change", async () => {
+  if (q.completed) return;
+
+  await supabase
+    .from("daily_quests")
+    .update({ completed: true })
+    .eq("id", q.id);
+
+  await addXP(q.xp);
+  showXPToast(q.xp, "Daily Quest Completed");
+
+  await loadLeaderboard(); // 🔥 THIS LINE FIXES IT
+
+  checkbox.disabled = true;
+});
+
+
+      box.appendChild(row);
+    });
+  }
+
+  // ========== XP HELPERS ==========
+  async function addXP(amount) {
+    if (!currentUser || !profile) return;
+
+    const newXp = (profile.xp || 0) + amount;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ xp: newXp })
+      .eq("id", currentUser.id);
+
+    if (error) {
+      console.error("Failed to add XP:", error);
+      return;
+    }
+
+    profile.xp = newXp;
+    renderXP(newXp);
+  }
+
+  function showXPToast(amount, label) {
+    const container = document.getElementById("toastContainer");
+    if (!container) {
+      const div = document.createElement("div");
+      div.id = "toastContainer";
+      div.style.cssText = "position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;";
+      document.body.appendChild(div);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerHTML = `<strong>+${amount} XP</strong> ${label}`;
+    toast.style.cssText = `
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: slideIn 0.3s ease-out;
+    `;
+    
+    const style = document.createElement("style");
+    if (!document.getElementById("toast-animation")) {
+      style.id = "toast-animation";
+      style.textContent = `
+        @keyframes slideIn {
+          from { transform: translateX(400px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    document.getElementById("toastContainer").appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  // set user info in UI
+  // logout
+  logoutBtn.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    location.href = '/index.html';
+  });
+
+  // init: auth check, fetch profile, leaderboard, subscribe realtime
+  (async function init() {
+    // Get logged-in user
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      window.location.href = "index.html";
+      return;
+    }
+
+    currentUser = user;
+
+    // Derive name safely
+    const userName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email.split("@")[0];
+
+    // Upsert profile with user info
+    const { data: upsertProfile, error: upsertError } = await supabase
+      .from("profiles")
+      .upsert({
+        id: user.id,
+        email: user.email,
+        name: userName
+      })
+      .select("xp, streak, name")
+      .single();
+
+    if (upsertError) {
+      console.error("Profile upsert error:", upsertError);
+      return;
+    }
+
+    profile = upsertProfile;
+    
+    // Show user name in top-right
+    userNameEl.innerText = profile.name || userName;
+    userAvatar.innerText = (profile.name || userName).charAt(0).toUpperCase();
+
+    // ✅ ONLY NOW render XP after profile is fully loaded
+    const xpAmount = profile.xp || 0;
+    renderXP(xpAmount);
+    previousXP = xpAmount;
+    previousLevel = getCurrentLevel(xpAmount).level;
+    
+    streakEl.innerText = profile.streak || 0;
+    
+    // ✅ Load daily quests after profile is ready
+    await loadDailyQuests(currentUser, profile);
+    
+    renderBadges();
+    updateCharts();
+
+    // Display XP info in console for debugging
+    console.log('📊 Profile XP:', {
+      profileXP: profile.xp || 0,
+      streak: profile.streak || 0
+    });
+
+    // fetch leaderboard once
+    await fetchLeaderboard();
+
+    // STEP 5: Real-time sync across tabs & devices
+    // Listen for profile XP updates and sync instantly
+    supabase
+      .channel("profile-realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles" },
+        payload => {
+          if (payload.new.id === currentUser.id) {
+            // Own profile updated - sync XP and streak
+            const newXP = payload.new.xp || 0;
+            profile = payload.new;
+            
+            renderXP(newXP);
+            streakEl.innerText = profile.streak || 0;
+
+            const newLevel = getCurrentLevel(newXP).level;
+            if (newLevel > previousLevel) {
+              showLevelUpAnimation(newLevel);
+              console.log('🎉 Level up!', { previousLevel, newLevel });
+            }
+
+            previousLevel = newLevel;
+            previousXP = newXP;
+            console.log('✅ Profile synced from realtime:', payload.new);
+          }
+          // Always refresh leaderboard on any profile update
+          fetchLeaderboard();
+        }
+      )
+      .subscribe();
+
+    // optional: handle auth state changes (sign-in/sign-out)
+    supabase.auth.onAuthStateChange((event, sess) => {
+      if (event === 'SIGNED_OUT') location.href = '/index.html';
+    });
+  })();
+
+  // small confetti helper
+  function confetti() {
+    confettiLib();
+    function confettiLib(){ try { confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } }); } catch(e){} }
+  }
+
+  // small utilities: sidebar/hamburger
+  const hamburger = document.getElementById("hamburger");
+  const sidebar = document.getElementById("sidebar");
+  hamburger.addEventListener("click",()=>{ sidebar.classList.toggle("show");});
+  sidebar.querySelectorAll("li").forEach(li=>li.addEventListener("click",()=>{ if(window.innerWidth<=768) sidebar.classList.remove("show"); }));
+  window.addEventListener("resize",()=>{ if(window.innerWidth>768) sidebar.classList.remove("show"); });
+
+  // mode toggle
+  document.getElementById("modeToggle").addEventListener("click",()=>{
+    document.body.classList.toggle("dark");
+    document.body.classList.toggle("light");
+  });
+
+  // navigation helper
+  function go(path){ window.location.href=path; }
+  window.go = go; // expose globally for sidebar onclicks
+</script>
+</body>
+</html>
