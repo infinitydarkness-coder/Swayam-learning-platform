@@ -508,18 +508,15 @@
     </form>
   </div>
 
-  <script type="module" async>
+  <script type="module">
     // ---------- REPLACE THESE with your Supabase values ----------
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
     const SUPABASE_URL = "https://xyakbprycadzleexjpoi.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5YWticHJ5Y2FkemxlZXhqcG9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDAyNTMsImV4cCI6MjA3ODA3NjI1M30.z4IqtEj02jyPE9d5bKH1UP_lxRm3ZcBCUcy7t5LUvrg";
     // -------------------------------------------------------------
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    // 🔥 HANDLE OAUTH REDIRECT TOKEN (CRITICAL)
-if (window.location.hash.includes("access_token")) {
-  await supabase.auth.getSession();
-  window.history.replaceState({}, document.title, "/dashboard.html");
-}
+    
+
     // ========== DOM ELEMENT REFERENCES ==========
     const userNameEl = document.getElementById("userName");
     const userAvatar = document.getElementById("userAvatar");
