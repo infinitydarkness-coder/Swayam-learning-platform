@@ -963,16 +963,30 @@ if (window.location.hash.includes("access_token")) {
     // init: auth check, fetch profile, leaderboard, subscribe realtime
     (async function init() {
       // Get logged-in user
-      const {
-  data: { session }
-} = await supabase.auth.getSession();
+      // 🔥 WAIT FOR SESSION PROPERLY
+let session = null;
+
+// Try to get session (retry for safety)
+for (let i = 0; i < 5; i++) {
+  const { data } = await supabase.auth.getSession();
+  session = data.session;
+
+  if (session) break;
+
+  // wait 300ms and retry
+  await new Promise(r => setTimeout(r, 300));
+}
 
 if (!session) {
+  console.log("❌ No session found");
   window.location.href = "index.html";
   return;
 }
 
 const user = session.user;
+currentUser = user;
+
+console.log("✅ Session loaded:", user);
 
     
       // Derive name safely
