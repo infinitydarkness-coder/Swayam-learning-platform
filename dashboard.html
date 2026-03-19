@@ -964,13 +964,15 @@ if (window.location.hash.includes("access_token")) {
     (async function init() {
       // Get logged-in user
       const {
-        data: { user }
-      } = await supabase.auth.getUser();
+  data: { session }
+} = await supabase.auth.getSession();
 
-      if (!user) {
-        window.location.href = "index.html";
-        return;
-      }
+if (!session) {
+  window.location.href = "index.html";
+  return;
+}
+
+const user = session.user;
 
     
       // Derive name safely
