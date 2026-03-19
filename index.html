@@ -156,7 +156,13 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const DASHBOARD_URL = "/dashboard.html";
+// 🔥 HANDLE OAUTH LOGIN HERE (NOT DASHBOARD)
+const hash = window.location.hash;
 
+if (hash && hash.includes("access_token")) {
+  // session will be saved automatically
+  window.location.href = "/dashboard.html";
+}
     // Theme toggle
     const toggle = document.getElementById("modeToggle");
     const circle = toggle.querySelector(".circle");
