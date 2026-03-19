@@ -515,6 +515,11 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5YWticHJ5Y2FkemxlZXhqcG9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDAyNTMsImV4cCI6MjA3ODA3NjI1M30.z4IqtEj02jyPE9d5bKH1UP_lxRm3ZcBCUcy7t5LUvrg";
     // -------------------------------------------------------------
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // 🔥 HANDLE OAUTH REDIRECT TOKEN (CRITICAL)
+if (window.location.hash.includes("access_token")) {
+  await supabase.auth.getSession();
+  window.history.replaceState({}, document.title, "/dashboard.html");
+}
     // ========== DOM ELEMENT REFERENCES ==========
     const userNameEl = document.getElementById("userName");
     const userAvatar = document.getElementById("userAvatar");
@@ -967,8 +972,7 @@
         return;
       }
 
-      currentUser = user;
-
+    
       // Derive name safely
       const userName =
         user.user_metadata?.full_name ||
@@ -995,7 +999,7 @@
 
       // Show user name in top-right
       userNameEl.innerText = profile.name || userName;
-      userAvatar.innerText = (profile.name || userName).charAt(0).toUpperCase();
+      userAvatar.inne = (profile.name || userName).charAt(0).toUpperCase();
 
       // ✅ ONLY NOW render XP after profile is fully loaded
       const xpAmount = profile.xp || 0;
