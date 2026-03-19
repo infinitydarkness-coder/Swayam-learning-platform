@@ -210,7 +210,9 @@
       if (ss) return { data: { session: ss } };
       return supabase.auth.getSession();
     }
-
+if (window.location.hash.includes("access_token")) {
+  window.location.href = "/dashboard.html";
+}
     // Login form
     const loginEmail = document.getElementById("loginEmail");
     const loginPassword = document.getElementById("loginPassword");
@@ -279,7 +281,7 @@
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: "https://swayam-learning.vercel.app/dashboard.html"
+      redirectTo: "https://swayam-learning.vercel.app"
     }
   });
   if (error) alert(error.message);
