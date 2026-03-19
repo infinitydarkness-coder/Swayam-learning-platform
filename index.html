@@ -281,7 +281,7 @@ if (window.location.hash.includes("access_token")) {
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: "https://swayam-learning.vercel.app"
+      redirectTo: "https://swayam-learning-platform.vercel.app"
     }
   });
   if (error) alert(error.message);
