@@ -160,8 +160,18 @@
 const hash = window.location.hash;
 
 if (hash && hash.includes("access_token")) {
-  // session will be saved automatically
-  window.location.href = "/dashboard.html";
+  console.log("OAuth detected, waiting...");
+
+  setTimeout(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session) {
+      console.log("✅ Session ready, redirecting...");
+      window.location.href = "/dashboard.html";
+    } else {
+      console.log("❌ Session still not ready");
+    }
+  }, 1500); // 🔥 THIS DELAY IS THE KEY
 }
     // Theme toggle
     const toggle = document.getElementById("modeToggle");
@@ -216,9 +226,7 @@ if (hash && hash.includes("access_token")) {
       if (ss) return { data: { session: ss } };
       return supabase.auth.getSession();
     }
-if (window.location.hash.includes("access_token")) {
-  window.location.href = "/dashboard.html";
-}
+
     // Login form
     const loginEmail = document.getElementById("loginEmail");
     const loginPassword = document.getElementById("loginPassword");
